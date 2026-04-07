@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Header -->
+<div class="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 rounded-3xl p-8 mb-8 text-white relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22><text y=%2270%22 font-size=%2255%22>⚙️</text></svg>');background-size:100px"></div>
+  <div class="relative">
+    <span class="badge bg-white/20 text-white text-xs mb-2 inline-flex">⚙️ Administración</span>
+    <h1 class="text-3xl font-extrabold mt-1">Panel de control</h1>
+    <p class="text-purple-200 mt-1 text-sm">Gestión completa de Huellitas Unidas DH</p>
+  </div>
+</div>
+
+<!-- Stats grid -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+  {% for icon, label, val, bg in [
+    ('👥','Usuarios',    stats.users,    'from-slate-500 to-slate-700'),
+    ('🐾','Mascotas',    stats.pets,     'from-orange-500 to-amber-600'),
+    ('🔍','Perdidos',    stats.lost,     'from-red-500 to-rose-600'),
+    ('🚨','Urgentes',    stats.urgent,   'from-orange-400 to-red-500'),
+    ('🏠','En adopción', stats.adoption, 'from-blue-500 to-indigo-600'),
+  ] %}
+    <div class="bg-gradient-to-br {{ bg }} rounded-2xl p-5 text-white shadow-sm">
+      <div class="text-2xl mb-2">{{ icon }}</div>
+      <div class="text-3xl font-extrabold">{{ val }}</div>
+      <div class="text-xs opacity-80 mt-1">{{ label }}</div>
+    </div>
+  {% endfor %}
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+  {% for icon, label, val, bg in [
+    ('✅','Adoptados',   stats.adopted,  'from-green-500 to-emerald-600'),
+    ('📍','Encontrados', stats.found,    'from-teal-500 to-cyan-600'),
+    ('📋','Solicitudes', stats.requests, 'from-violet-500 to-purple-600'),
+    ('⏳','Pendientes',  stats.pending,  'from-yellow-500 to-amber-600'),
+    ('🛡','Rescatistas', stats.rescuers, 'from-blue-400 to-blue-600'),
+  ] %}
+    <div class="bg-gradient-to-br {{ bg }} rounded-2xl p-5 text-white shadow-sm">
+      <div class="text-2xl mb-2">{{ icon }}</div>
+      <div class="text-3xl font-extrabold">{{ val }}</div>
+      <div class="text-xs opacity-80 mt-1">{{ label }}</div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Nav rápida -->
+<div class="flex flex-wrap gap-3 mb-8">
+  <a href="{{ url_for('admin.list_users') }}" class="btn-secondary">👥 Usuarios</a>
+  <a href="{{ url_for('admin.list_pets') }}" class="btn-secondary">🐾 Mascotas</a>
+  <a href="{{ url_for('admin.list_requests') }}" class="btn-secondary">
+    📋 Solicitudes
+    {% if stats.pending > 0 %}
+      <span class="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ stats.pending }}</span>
+    {% endif %}
+  </a>
+  <a href="{{ url_for('admin.list_donations') }}" class="btn-secondary">💰 Donaciones</a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Últimas mascotas -->
+  <div class="card p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-bold text-gray-900">Últimas mascotas reportadas</h2>
+      <a href="{{ url_for('admin.list_pets') }}" class="text-xs text-orange-500 hover:underline font-semibold">Ver todas →</a>
+    </div>
+    <div class="space-y-3">
+      {% for pet in recent_pets %}
+        <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-xl flex-shrink-0">
+            {{ pet.species_emoji }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <a href="{{ url_for('pets.detail', pet_id=pet.id) }}"
+               class="font-semibold text-sm text-gray-900 hover:text-orange-500 block truncate">
+              {{ pet.display_name }} · {{ pet.species }}
+            </a>
+            <p class="text-xs text-gray-400">{{ pet.location_zone }} · {{ pet.created_at.strftime('%d %b %Y') }}</p>
+          </div>
+          <span class="badge text-xs flex-shrink-0"
+                style="background:{{ {'Perdido':'#fee2e2','Urgente':'#ffedd5','En Adopción':'#dbeafe','Encontrado':'#dcfce7','Adoptado':'#f3e8ff'}.get(pet.status,'#f3f4f6') }};
+                       color:{{ {'Perdido':'#b91c1c','Urgente':'#c2410c','En Adopción':'#1d4ed8','Encontrado':'#15803d','Adoptado':'#7e22ce'}.get(pet.status,'#374151') }}">
+            {{ pet.status }}
+          </span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Últimos usuarios -->
+  <div class="card p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-bold text-gray-900">Últimos registros</h2>
+      <a href="{{ url_for('admin.list_users') }}" class="text-xs text-orange-500 hover:underline font-semibold">Ver todos →</a>
+    </div>
+    <div class="space-y-3">
+      {% for user in recent_users %}
+        <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+          <div class="avatar from-orange-400 to-rose-500 w-10 h-10 text-sm flex-shrink-0">{{ user.initials }}</div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-sm text-gray-900 truncate">{{ user.full_name }}</p>
+            <p class="text-xs text-gray-400">@{{ user.username }} · {{ user.created_at.strftime('%d %b %Y') }}</p>
+          </div>
+          <span class="badge text-xs flex-shrink-0
+            {% if user.role == 'admin' %}bg-purple-100 text-purple-700
+            {% elif user.role == 'rescatista' %}bg-blue-100 text-blue-700
+            {% else %}bg-gray-100 text-gray-600{% endif %}">
+            {{ user.role }}
+          </span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

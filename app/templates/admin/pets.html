@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <a href="{{ url_for('admin.dashboard') }}" class="text-sm text-gray-400 hover:text-orange-500">← Panel</a>
+    <h1 class="page-title mt-1">🐾 Moderar mascotas</h1>
+  </div>
+  <a href="{{ url_for('pets.create') }}" class="btn-primary">➕ Reportar mascota</a>
+</div>
+
+<!-- Filtros -->
+<div class="card p-4 mb-6">
+  <form method="get" class="flex flex-wrap gap-3 items-end">
+    <div class="min-w-40">
+      <label class="field-label">Estado</label>
+      <select name="status" class="field-select">
+        <option value="">Todos los estados</option>
+        {% for s in statuses %}
+          <option value="{{ s }}" {{ 'selected' if status_f == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="min-w-36">
+      <label class="field-label">Visibilidad</label>
+      <select name="active" class="field-select">
+        <option value="">Todas</option>
+        <option value="1" {{ 'selected' if active_f == '1' }}>Solo activas</option>
+        <option value="0" {{ 'selected' if active_f == '0' }}>Solo eliminadas</option>
+      </select>
+    </div>
+    <button type="submit" class="btn-primary">Filtrar</button>
+    <a href="{{ url_for('admin.list_pets') }}" class="btn-secondary">Limpiar</a>
+  </form>
+</div>
+
+<div class="card overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b border-gray-100">
+        <tr>
+          <th class="text-left px-5 py-3.5 font-semibold text-gray-600">Mascota</th>
+          <th class="text-left px-5 py-3.5 font-semibold text-gray-600 hidden sm:table-cell">Zona</th>
+          <th class="text-left px-5 py-3.5 font-semibold text-gray-600">Estado</th>
+          <th class="text-left px-5 py-3.5 font-semibold text-gray-600 hidden md:table-cell">Reportado por</th>
+          <th class="text-left px-5 py-3.5 font-semibold text-gray-600 hidden lg:table-cell">Fecha</th>
+          <th class="text-left px-5 py-3.5 font-semibold text-gray-600">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for pet in pets.items %}
+          <tr class="hover:bg-gray-50 transition-colors {{ 'bg-red-50/50' if not pet.is_active }}">
+            <td class="px-5 py-4">
+              <div class="flex items-center gap-3">
+                {% if pet.image_url %}
+                  <img src="{{ url_for('static', filename='uploads/pets/' + pet.image_url) }}"
+                       class="w-10 h-10 rounded-xl object-cover flex-shrink-0 border border-gray-100"/>
+                {% else %}
+                  <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-xl flex-shrink-0">
+                    {{ pet.species_emoji }}
+                  </div>
+                {% endif %}
+                <div>
+                  <p class="font-semibold text-gray-900">{{ pet.display_name }}</p>
+                  <p class="text-xs text-gray-400">{{ pet.species }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-5 py-4 text-gray-600 text-xs hidden sm:table-cell">{{ pet.location_zone }}</td>
+            <td class="px-5 py-4">
+              <span class="badge text-xs"
+                    style="background:{{ {'Perdido':'#fee2e2','Urgente':'#ffedd5','En Adopción':'#dbeafe','Encontrado':'#dcfce7','Adoptado':'#f3e8ff'}.get(pet.status,'#f3f4f6') }};
+                           color:{{ {'Perdido':'#b91c1c','Urgente':'#c2410c','En Adopción':'#1d4ed8','Encontrado':'#15803d','Adoptado':'#7e22ce'}.get(pet.status,'#374151') }}">
+                {{ pet.status }}
+              </span>
+            </td>
+            <td class="px-5 py-4 text-xs text-gray-600 hidden md:table-cell">
+              {{ pet.reporter.full_name if pet.reporter else '—' }}
+            </td>
+            <td class="px-5 py-4 text-xs text-gray-400 hidden lg:table-cell">
+              {{ pet.created_at.strftime('%d %b %Y') }}
+            </td>
+            <td class="px-5 py-4">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <a href="{{ url_for('pets.detail', pet_id=pet.id) }}"
+                   class="btn-secondary btn-sm">Ver</a>
+                {% if not pet.is_active %}
+                  <form method="post" action="{{ url_for('admin.restore_pet', pet_id=pet.id) }}" class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn-success btn-sm">Restaurar</button>
+                  </form>
+                  <form method="post" action="{{ url_for('admin.hard_delete_pet', pet_id=pet.id) }}"
+                        onsubmit="return confirm('⚠️ Eliminar permanentemente. Esta acción NO se puede deshacer.')"
+                        class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn-danger btn-sm">🗑 Eliminar</button>
+                  </form>
+                {% else %}
+                  <a href="{{ url_for('pets.edit', pet_id=pet.id) }}" class="btn-secondary btn-sm">Editar</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  {% if pets.pages > 1 %}
+    <div class="flex justify-between items-center px-5 py-4 border-t border-gray-100 bg-gray-50">
+      <p class="text-xs text-gray-500">{{ pets.total }} mascotas en total</p>
+      <div class="flex gap-2">
+        {% if pets.has_prev %}
+          <a href="{{ url_for('admin.list_pets', page=pets.prev_num, status=status_f, active=active_f) }}"
+             class="btn-secondary btn-sm">← Anterior</a>
+        {% endif %}
+        <span class="px-3 py-1.5 text-xs text-gray-500">{{ pets.page }}/{{ pets.pages }}</span>
+        {% if pets.has_next %}
+          <a href="{{ url_for('admin.list_pets', page=pets.next_num, status=status_f, active=active_f) }}"
+             class="btn-secondary btn-sm">Siguiente →</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

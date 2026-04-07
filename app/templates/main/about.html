@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-3xl font-extrabold text-gray-800 mb-2">🐾 Acerca del proyecto</h1>
+  <p class="text-gray-500 mb-8">Huellitas Unidas DH — Equipo DUBS</p>
+  <div class="card p-8 space-y-5 text-gray-700 leading-relaxed">
+    <p>En <strong>Dolores Hidalgo, Guanajuato</strong>, el rescate y adopción de mascotas se organizaba principalmente a través de grupos de Facebook, donde la información se perdía rápidamente en el feed y no existía un control real sobre los procesos.</p>
+    <p><strong>Huellitas Unidas DH</strong> centraliza toda esa información en una plataforma estructurada: cada mascota perdida, en adopción o en situación urgente tiene un expediente digital con seguimiento real hasta que regresa a casa o es adoptada.</p>
+    <h2 class="text-xl font-bold text-gray-800 pt-2">Tecnología utilizada</h2>
+    <ul class="space-y-2 text-sm">
+      <li class="flex items-center gap-2"><span class="text-orange-400">▸</span><strong>Backend:</strong> Python + Flask con Blueprints modulares</li>
+      <li class="flex items-center gap-2"><span class="text-orange-400">▸</span><strong>Base de datos:</strong> PostgreSQL vía SQLAlchemy + Flask-Migrate</li>
+      <li class="flex items-center gap-2"><span class="text-orange-400">▸</span><strong>Autenticación:</strong> Flask-Login + bcrypt + JWT</li>
+      <li class="flex items-center gap-2"><span class="text-orange-400">▸</span><strong>Frontend:</strong> Jinja2 + Tailwind CSS</li>
+      <li class="flex items-center gap-2"><span class="text-orange-400">▸</span><strong>Despliegue:</strong> Render / Railway</li>
+    </ul>
+    <h2 class="text-xl font-bold text-gray-800 pt-2">Equipo DUBS</h2>
+    <ul class="space-y-1 text-sm">
+      <li>🧑‍💻 <strong>Samae & Diego</strong> — Backend y Arquitectura de Base de Datos</li>
+      <li>🎨 <strong>Uriel</strong> — Frontend y UI/UX</li>
+      <li>🔒 <strong>Brayan</strong> — Seguridad y QA</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-lg mx-auto text-center py-24">
+  <div class="w-24 h-24 rounded-3xl bg-orange-100 flex items-center justify-center text-5xl mx-auto mb-6">🐾</div>
+  <h1 class="text-6xl font-black text-gray-900 mb-3">404</h1>
+  <p class="text-xl font-bold text-gray-700 mb-2">¡Esta página se perdió como una mascota!</p>
+  <p class="text-gray-400 mb-8">La página que buscas no existe o fue eliminada.</p>
+  <div class="flex gap-3 justify-center">
+    <a href="{{ url_for('main.index') }}" class="btn-primary">Ir al inicio</a>
+    <a href="{{ url_for('pets.index') }}" class="btn-secondary">Ver mascotas</a>
+  </div>
+</div>
+{% endblock %}

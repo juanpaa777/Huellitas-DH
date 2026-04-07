@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}{{ title }} — Huellitas Unidas DH{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#fff7ed',100:'#ffedd5',200:'#fed7aa',300:'#fdba74',
+                     400:'#fb923c',500:'#f97316',600:'#ea580c',700:'#c2410c',800:'#9a3412' },
+          },
+          fontFamily: { sans: ['Inter','system-ui','sans-serif'] },
+          boxShadow: {
+            'card': '0 1px 3px 0 rgba(0,0,0,.06), 0 1px 2px -1px rgba(0,0,0,.06)',
+            'card-hover': '0 4px 16px -2px rgba(0,0,0,.10), 0 2px 6px -2px rgba(0,0,0,.06)',
+            'form': '0 0 0 1px rgba(0,0,0,.06), 0 8px 32px -4px rgba(0,0,0,.10)',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Badges de estado ─────────────────────────────── */
+    .status-Perdido    { background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; }
+    .status-Urgente    { background:#ffedd5; color:#c2410c; border:1px solid #fdba74; }
+    .status-En\ Adopción { background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; }
+    .status-Encontrado { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+    .status-Adoptado   { background:#f3e8ff; color:#7e22ce; border:1px solid #d8b4fe; }
+    .dot-Perdido     { background:#ef4444; }
+    .dot-Urgente     { background:#f97316; }
+    .dot-En\ Adopción{ background:#3b82f6; }
+    .dot-Encontrado  { background:#22c55e; }
+    .dot-Adoptado    { background:#a855f7; }
+
+    /* ── Componentes base ─────────────────────────────── */
+    .btn { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-5 py-2.5 transition-all duration-200 text-sm cursor-pointer; }
+    .btn-primary  { @apply btn bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-sm hover:shadow-md active:scale-95; }
+    .btn-secondary{ @apply btn bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 hover:border-gray-300 shadow-card hover:shadow-card-hover active:scale-95; }
+    .btn-success  { @apply btn bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-sm hover:shadow-md active:scale-95; }
+    .btn-danger   { @apply btn bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-sm hover:shadow-md active:scale-95; }
+    .btn-ghost    { @apply btn hover:bg-gray-100 text-gray-600 active:scale-95; }
+    .btn-sm       { @apply px-3 py-1.5 text-xs rounded-lg; }
+    .btn-icon     { @apply btn p-2 rounded-lg; }
+
+    /* ── Cards ────────────────────────────────────────── */
+    .card         { @apply bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden; }
+    .card-hover   { @apply card hover:shadow-card-hover transition-shadow duration-200; }
+
+    /* ── Form inputs ──────────────────────────────────── */
+    .field-wrapper{ @apply space-y-1.5; }
+    .field-label  { @apply block text-sm font-semibold text-gray-700; }
+    .field-input  { @apply w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 text-sm placeholder-gray-400
+                           focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 focus:bg-white
+                           transition-all duration-150; }
+    .field-select { @apply field-input appearance-none cursor-pointer; }
+    .field-textarea{ @apply field-input resize-none; }
+    .field-error  { @apply text-red-500 text-xs mt-1 flex items-center gap-1; }
+    .field-hint   { @apply text-gray-400 text-xs mt-1; }
+
+    /* ── Section title inside forms ───────────────────── */
+    .form-section-title {
+      @apply text-xs font-bold uppercase tracking-widest text-orange-600 mb-4
+             flex items-center gap-2 after:flex-1 after:h-px after:bg-orange-100;
+    }
+
+    /* ── Flash ────────────────────────────────────────── */
+    .flash-success{ @apply bg-green-50 border border-green-200 text-green-800; }
+    .flash-danger { @apply bg-red-50   border border-red-200   text-red-800; }
+    .flash-info   { @apply bg-blue-50  border border-blue-200  text-blue-800; }
+    .flash-warning{ @apply bg-amber-50 border border-amber-200 text-amber-800; }
+
+    /* ── Misc ─────────────────────────────────────────── */
+    .badge        { @apply inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full; }
+    .avatar       { @apply rounded-full flex items-center justify-center font-bold text-white bg-gradient-to-br flex-shrink-0; }
+    .nav-link     { @apply px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-all duration-150; }
+    .nav-link-active { @apply px-3 py-2 rounded-lg text-sm font-semibold text-orange-600 bg-orange-50; }
+    .divider      { @apply border-t border-gray-100 my-6; }
+    .page-header  { @apply mb-8; }
+    .page-title   { @apply text-3xl font-extrabold text-gray-900 tracking-tight; }
+    .page-subtitle{ @apply text-gray-500 mt-1 text-base; }
+
+    /* ── Scrollbar ────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f9fafb; }
+    ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col antialiased">
+
+<!-- ─── NAVBAR ────────────────────────────────────────────────────────────── -->
+<nav class="bg-white/90 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-15 flex items-center justify-between gap-4" style="height:60px">
+
+    <!-- Logo -->
+    <a href="{{ url_for('main.index') }}" class="flex items-center gap-2.5 group flex-shrink-0">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-sm">
+        <span class="text-lg">🐾</span>
+      </div>
+      <div class="hidden sm:block">
+        <p class="font-extrabold text-gray-900 text-sm leading-tight">Huellitas Unidas</p>
+        <p class="text-orange-500 text-xs font-semibold">Dolores Hidalgo</p>
+      </div>
+    </a>
+
+    <!-- Nav centro (escritorio) -->
+    <div class="hidden md:flex items-center gap-1 flex-1 justify-center">
+      <a href="{{ url_for('main.index') }}" class="nav-link">Inicio</a>
+      <a href="{{ url_for('pets.index') }}" class="nav-link">Mascotas</a>
+      <a href="{{ url_for('pets.index', status='Perdido') }}" class="nav-link">Perdidos</a>
+      <a href="{{ url_for('pets.index', status='En Adopción') }}" class="nav-link">En adopción</a>
+    </div>
+
+    <!-- Nav derecha -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+      {% if current_user.is_authenticated %}
+        <!-- Notificaciones -->
+        <a href="{{ url_for('rescuer.notifications') }}"
+           class="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-orange-600 transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          {% set unread = current_user.unread_notifications_count %}
+          {% if unread > 0 %}
+            <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              {{ unread if unread < 10 else '9+' }}
+            </span>
+          {% endif %}
+        </a>
+
+        <!-- + Reportar -->
+        <a href="{{ url_for('pets.create') }}" class="btn-primary btn-sm hidden sm:inline-flex">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          Reportar
+        </a>
+
+        <!-- Menú usuario -->
+        <div class="relative" id="user-menu-wrapper">
+          <button id="user-menu-btn" onclick="toggleMenu()"
+                  class="flex items-center gap-2 pl-1 pr-3 py-1 rounded-xl hover:bg-gray-100 transition-all">
+            <div class="avatar from-orange-400 to-rose-500 w-8 h-8 text-sm">
+              {{ current_user.initials }}
+            </div>
+            <span class="hidden sm:block text-sm font-semibold text-gray-700 max-w-24 truncate">
+              {{ current_user.full_name.split()[0] }}
+            </span>
+            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 divide-y divide-gray-50">
+            <div class="px-4 py-3">
+              <p class="font-bold text-gray-900 text-sm">{{ current_user.full_name }}</p>
+              <p class="text-gray-400 text-xs">@{{ current_user.username }}</p>
+              <span class="badge mt-1.5
+                {% if current_user.role == 'admin' %}bg-purple-100 text-purple-700
+                {% elif current_user.role == 'rescatista' %}bg-blue-100 text-blue-700
+                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                {{ current_user.role.capitalize() }}
+              </span>
+            </div>
+            <div class="py-1">
+              <a href="{{ url_for('auth.profile') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Mi perfil
+              </a>
+              <a href="{{ url_for('adoptions.my_requests') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Mis solicitudes
+              </a>
+              {% if current_user.is_rescuer %}
+                <a href="{{ url_for('rescuer.dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 font-semibold">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                  Panel Rescatista
+                </a>
+              {% endif %}
+              {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 font-semibold">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+                  Administración
+                </a>
+              {% endif %}
+            </div>
+            <div class="py-1">
+              <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Cerrar sesión
+              </a>
+            </div>
+          </div>
+        </div>
+
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn-secondary btn-sm">Iniciar sesión</a>
+        <a href="{{ url_for('auth.register') }}" class="btn-primary btn-sm">Registrarse</a>
+      {% endif %}
+
+      <!-- Hamburger móvil -->
+      <button id="mobile-btn" onclick="toggleMobile()"
+              class="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menú móvil -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1">
+    <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">🏠 Inicio</a>
+    <a href="{{ url_for('pets.index') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">🐾 Mascotas</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('pets.create') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">➕ Reportar mascota</a>
+      <a href="{{ url_for('adoptions.my_requests') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">📋 Mis solicitudes</a>
+      <a href="{{ url_for('auth.profile') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">👤 Perfil</a>
+      {% if current_user.is_rescuer %}<a href="{{ url_for('rescuer.dashboard') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-blue-700 font-semibold hover:bg-blue-50">🛡 Panel Rescatista</a>{% endif %}
+      {% if current_user.is_admin %}<a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-purple-700 font-semibold hover:bg-purple-50">⚙️ Administración</a>{% endif %}
+      <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50">🚪 Cerrar sesión</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-orange-50">Iniciar sesión</a>
+      <a href="{{ url_for('auth.register') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-orange-600">Registrarse →</a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- ─── FLASH MESSAGES ─────────────────────────────────────────────────────── -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-4 w-full space-y-2" id="flash-container">
+      {% for category, message in messages %}
+        <div class="flash-{{ category }} rounded-xl px-4 py-3 flex items-center justify-between text-sm font-medium shadow-sm">
+          <span>{{ message }}</span>
+          <button onclick="this.parentElement.remove()" class="ml-4 opacity-50 hover:opacity-100 text-lg">&times;</button>
+        </div>
+      {% endfor %}
+    </div>
+    <script>
+      setTimeout(() => {
+        const c = document.getElementById('flash-container');
+        if (c) { c.style.transition = 'opacity .5s'; c.style.opacity = '0'; setTimeout(() => c.remove(), 500); }
+      }, 4000);
+    </script>
+  {% endif %}
+{% endwith %}
+
+<!-- ─── CONTENT ────────────────────────────────────────────────────────────── -->
+<main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ─── FOOTER ────────────────────────────────────────────────────────────── -->
+<footer class="bg-white border-t border-gray-100 mt-auto">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+          <span>🐾</span>
+        </div>
+        <div>
+          <p class="font-bold text-gray-900 text-sm">Huellitas Unidas DH</p>
+          <p class="text-gray-400 text-xs">Dolores Hidalgo, Guanajuato · Equipo DUBS</p>
+        </div>
+      </div>
+      <div class="flex gap-5 text-sm text-gray-400">
+        <a href="{{ url_for('pets.index') }}" class="hover:text-orange-500 transition-colors">Mascotas</a>
+        <a href="{{ url_for('main.about') }}" class="hover:text-orange-500 transition-colors">Acerca</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleMenu() {
+    const m = document.getElementById('user-menu');
+    m.classList.toggle('hidden');
+  }
+  function toggleMobile() {
+    document.getElementById('mobile-menu').classList.toggle('hidden');
+  }
+  // Cerrar menú al click fuera
+  document.addEventListener('click', e => {
+    const wrapper = document.getElementById('user-menu-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      document.getElementById('user-menu')?.classList.add('hidden');
+    }
+  });
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

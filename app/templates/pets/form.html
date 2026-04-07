@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-center gap-3 mb-1">
+      <a href="{{ url_for('pets.index') }}" class="text-gray-400 hover:text-orange-500 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </a>
+      <h1 class="page-title text-2xl">{{ '✏️ Editar reporte' if action == 'Editar' else '🐾 Reportar mascota' }}</h1>
+    </div>
+    <p class="page-subtitle text-sm ml-8">Completa la información para ayudar a encontrar o dar en adopción a esta mascota.</p>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-form border border-gray-100 overflow-hidden">
+    <div class="h-1.5 bg-gradient-to-r from-orange-400 via-rose-400 to-amber-400"></div>
+
+    <form method="post" enctype="multipart/form-data" novalidate class="p-7 md:p-10 space-y-8">
+      {{ form.hidden_tag() }}
+
+      <!-- ── Sección: Datos básicos ────────────────────── -->
+      <div>
+        <p class="form-section-title">Información de la mascota</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div class="field-wrapper">
+            {{ form.name.label(class="field-label") }}
+            {{ form.name(class="field-input", placeholder="Ej. Firulais (opcional)") }}
+            {% for e in form.name.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+          <div class="field-wrapper">
+            {{ form.species.label(class="field-label") }}
+            {{ form.species(class="field-select") }}
+            {% for e in form.species.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+          <div class="field-wrapper">
+            {{ form.breed.label(class="field-label") }}
+            {{ form.breed(class="field-input", placeholder="Ej. Labrador, mestizo…") }}
+          </div>
+          <div class="field-wrapper">
+            {{ form.approximate_age.label(class="field-label") }}
+            {{ form.approximate_age(class="field-input", placeholder="Ej. 2 años, cachorro") }}
+          </div>
+          <div class="field-wrapper sm:col-span-2">
+            {{ form.color.label(class="field-label") }}
+            {{ form.color(class="field-input", placeholder="Ej. Café con manchas blancas en el pecho") }}
+            {% for e in form.color.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+          <div class="field-wrapper sm:col-span-2">
+            {{ form.description.label(class="field-label") }}
+            {{ form.description(class="field-textarea", rows=4,
+               placeholder="Señas particulares: collar, cicatrices, comportamiento, microchip, etc.") }}
+            {% for e in form.description.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Sección: Estado y ubicación ─────────────── -->
+      <div>
+        <p class="form-section-title">Estado y ubicación</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div class="field-wrapper">
+            {{ form.status.label(class="field-label") }}
+            {{ form.status(class="field-select") }}
+            {% for e in form.status.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+            <p class="field-hint">Una mascota no puede estar Perdida y En Adopción simultáneamente.</p>
+          </div>
+          <div class="field-wrapper">
+            {{ form.last_seen_date.label(class="field-label") }}
+            {{ form.last_seen_date(class="field-input") }}
+          </div>
+          <div class="field-wrapper">
+            {{ form.location_zone.label(class="field-label") }}
+            {{ form.location_zone(class="field-select") }}
+            {% for e in form.location_zone.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+          <div class="field-wrapper">
+            {{ form.location_reference.label(class="field-label") }}
+            {{ form.location_reference(class="field-input", placeholder="Ej. Frente a la panadería La Colonial") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Sección: Foto ────────────────────────────── -->
+      <div>
+        <p class="form-section-title">Fotografía</p>
+        {% if pet and pet.image_url %}
+          <div class="flex items-center gap-4 mb-4 p-4 bg-gray-50 rounded-2xl">
+            <img src="{{ url_for('static', filename='uploads/pets/' + pet.image_url) }}"
+                 class="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-sm"/>
+            <div>
+              <p class="text-sm font-semibold text-gray-700">Imagen actual</p>
+              <p class="text-xs text-gray-400 mt-0.5">Sube una nueva para reemplazarla.</p>
+            </div>
+          </div>
+        {% endif %}
+        <div class="border-2 border-dashed border-gray-200 rounded-2xl p-6 hover:border-orange-300 transition-colors bg-gray-50 hover:bg-orange-50 text-center">
+          {{ form.image(class="hidden", id="file-input", accept="image/*",
+             onchange="previewImg(this)") }}
+          <label for="file-input" class="cursor-pointer">
+            <div id="preview-container" class="hidden mb-3">
+              <img id="preview-img" class="h-32 mx-auto rounded-xl object-cover shadow"/>
+            </div>
+            <div id="upload-placeholder">
+              <div class="text-4xl mb-2">📷</div>
+              <p class="text-sm font-semibold text-gray-700">Haz clic para subir una foto</p>
+              <p class="text-xs text-gray-400 mt-1">JPG, PNG, WebP · Máx. 5 MB</p>
+            </div>
+          </label>
+          {% for e in form.image.errors %}<p class="field-error justify-center mt-2">⚠ {{ e }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex flex-wrap gap-3 pt-2">
+        <button type="submit" class="btn-primary px-8 py-3 text-base">
+          {{ '💾 Guardar cambios' if action == 'Editar' else '🐾 Publicar reporte' }}
+        </button>
+        <a href="{{ url_for('pets.index') }}" class="btn-secondary py-3">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function previewImg(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('preview-container').classList.remove('hidden');
+    document.getElementById('upload-placeholder').classList.add('hidden');
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+</script>
+{% endblock %}

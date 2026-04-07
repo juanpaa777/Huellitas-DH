@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <a href="{{ url_for('admin.dashboard') }}" class="text-sm text-gray-400 hover:text-orange-500">← Panel</a>
+    <h1 class="page-title mt-1">💰 Donaciones</h1>
+  </div>
+  <div class="card px-5 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+    <p class="text-xs text-green-600 font-semibold">Total recaudado</p>
+    <p class="text-2xl font-extrabold text-green-700">${{ "%.2f"|format(total_sum) }}</p>
+  </div>
+</div>
+{% if donations.items %}
+  <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th class="text-left px-5 py-3.5 font-semibold text-gray-600">Donante</th>
+            <th class="text-left px-5 py-3.5 font-semibold text-gray-600">Mascota</th>
+            <th class="text-left px-5 py-3.5 font-semibold text-gray-600">Monto</th>
+            <th class="text-left px-5 py-3.5 font-semibold text-gray-600 hidden sm:table-cell">Descripción</th>
+            <th class="text-left px-5 py-3.5 font-semibold text-gray-600 hidden md:table-cell">Fecha</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for d in donations.items %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-4 font-medium text-gray-900">
+                {% if d.is_anonymous %}
+                  <span class="text-gray-400 italic">Anónimo</span>
+                {% elif d.donor %}
+                  {{ d.donor.full_name }}
+                {% else %}—{% endif %}
+              </td>
+              <td class="px-5 py-4">
+                {% if d.pet %}
+                  <a href="{{ url_for('pets.detail', pet_id=d.pet.id) }}"
+                     class="text-orange-500 hover:underline font-semibold">{{ d.pet.display_name }}</a>
+                {% else %}<span class="text-gray-400">General</span>{% endif %}
+              </td>
+              <td class="px-5 py-4">
+                <span class="font-extrabold text-green-700">${{ "%.2f"|format(d.amount) }}</span>
+              </td>
+              <td class="px-5 py-4 text-gray-600 text-xs hidden sm:table-cell">{{ d.description or '—' }}</td>
+              <td class="px-5 py-4 text-xs text-gray-400 hidden md:table-cell">{{ d.created_at.strftime('%d %b %Y') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if donations.pages > 1 %}
+      <div class="flex justify-center gap-2 px-5 py-4 border-t border-gray-100">
+        {% if donations.has_prev %}
+          <a href="{{ url_for('admin.list_donations', page=donations.prev_num) }}" class="btn-secondary btn-sm">← Anterior</a>
+        {% endif %}
+        <span class="px-3 py-1.5 text-xs text-gray-500">{{ donations.page }}/{{ donations.pages }}</span>
+        {% if donations.has_next %}
+          <a href="{{ url_for('admin.list_donations', page=donations.next_num) }}" class="btn-secondary btn-sm">Siguiente →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="card p-16 text-center">
+    <div class="text-5xl mb-4">💰</div>
+    <p class="text-gray-500 font-semibold">Sin donaciones registradas aún</p>
+  </div>
+{% endif %}
+{% endblock %}

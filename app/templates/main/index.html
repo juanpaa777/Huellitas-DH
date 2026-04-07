@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Hero -->
+<section class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-orange-500 via-amber-500 to-rose-500 text-white px-8 py-16 mb-10 shadow-xl">
+  <div class="absolute inset-0 opacity-10"
+       style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22><text y=%2270%22 font-size=%2260%22>🐾</text></svg>');background-size:120px"></div>
+  <div class="relative max-w-2xl">
+    <span class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold mb-4">
+      🐾 Dolores Hidalgo, Guanajuato
+    </span>
+    <h1 class="text-4xl md:text-5xl font-black leading-tight mb-4">
+      Cada mascota merece<br>encontrar su hogar
+    </h1>
+    <p class="text-orange-100 text-lg mb-8 max-w-lg leading-relaxed">
+      Centralizamos el rescate, adopción y localización de mascotas. Olvídate de perder publicaciones en Facebook.
+    </p>
+    <div class="flex flex-wrap gap-3">
+      <a href="{{ url_for('pets.index') }}"
+         class="bg-white text-orange-600 font-bold px-6 py-3 rounded-xl hover:bg-orange-50 transition-all shadow-md">
+        Ver mascotas
+      </a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('pets.create') }}"
+           class="bg-orange-700/60 backdrop-blur-sm text-white font-bold px-6 py-3 rounded-xl hover:bg-orange-700 transition-all border border-white/20">
+          + Reportar mascota
+        </a>
+      {% else %}
+        <a href="{{ url_for('auth.register') }}"
+           class="bg-orange-700/60 backdrop-blur-sm text-white font-bold px-6 py-3 rounded-xl hover:bg-orange-700 transition-all border border-white/20">
+          Únete gratis →
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
+  {% for icon, label, val, cls in [
+    ('🐾','Registradas', stats.total,    'border-gray-200 bg-white'),
+    ('🔍','Perdidas',    stats.lost,     'border-red-200 bg-red-50'),
+    ('🚨','Urgentes',    stats.urgent,   'border-orange-200 bg-orange-50'),
+    ('🏠','En adopción', stats.adoption, 'border-blue-200 bg-blue-50'),
+    ('✅','Adoptadas',   stats.adopted,  'border-green-200 bg-green-50'),
+  ] %}
+    <div class="rounded-2xl border {{ cls }} p-4 text-center shadow-card hover:shadow-card-hover transition-shadow">
+      <div class="text-2xl mb-1">{{ icon }}</div>
+      <div class="text-3xl font-extrabold text-gray-900">{{ val }}</div>
+      <div class="text-xs font-medium text-gray-500 mt-1">{{ label }}</div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Buscador -->
+<div class="card p-5 mb-10 bg-gradient-to-r from-gray-50 to-white">
+  <form action="{{ url_for('main.search') }}" method="get" class="flex gap-3">
+    <div class="relative flex-1">
+      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </span>
+      <input type="text" name="q" placeholder="Buscar por nombre, color, zona…" class="field-input pl-11"/>
+    </div>
+    <button type="submit" class="btn-primary">Buscar</button>
+  </form>
+</div>
+
+<!-- Secciones -->
+{% macro pet_section(title, icon, pets, status_filter, link_label) %}
+  {% if pets %}
+    <section class="mb-10">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+          <span>{{ icon }}</span> {{ title }}
+        </h2>
+        <a href="{{ url_for('pets.index', status=status_filter) }}"
+           class="text-sm font-semibold text-orange-500 hover:text-orange-600 flex items-center gap-1">
+          {{ link_label }}
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {% for pet in pets %}{% include "pets/_card.html" %}{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+{% endmacro %}
+
+{{ pet_section('Casos Urgentes', '🚨', urgent, 'Urgente', 'Ver todos') }}
+{{ pet_section('Mascotas Perdidas', '🔍', lost, 'Perdido', 'Ver todos') }}
+{{ pet_section('En Adopción', '🏠', adoption, 'En Adopción', 'Ver todos') }}
+
+{% if not urgent and not lost and not adoption %}
+  <div class="card p-20 text-center">
+    <div class="text-7xl mb-5">🐾</div>
+    <h3 class="text-2xl font-extrabold text-gray-800 mb-2">¡Sé el primero en ayudar!</h3>
+    <p class="text-gray-500 mb-7">Aún no hay mascotas registradas. Reporta una mascota perdida o en adopción.</p>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('pets.create') }}" class="btn-primary text-base px-8 py-3">+ Reportar mascota</a>
+    {% else %}
+      <a href="{{ url_for('auth.register') }}" class="btn-primary text-base px-8 py-3">Crear cuenta gratis</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

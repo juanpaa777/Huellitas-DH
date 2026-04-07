@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Header del panel -->
+<div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 rounded-3xl p-8 mb-8 text-white relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22><text y=%2270%22 font-size=%2260%22>🛡</text></svg>');background-size:100px"></div>
+  <div class="relative">
+    <div class="flex items-center gap-3 mb-1">
+      <span class="badge bg-white/20 text-white">🛡 Panel Rescatista</span>
+      {% if current_user.is_verified %}<span class="badge bg-green-400/30 text-green-100">✓ Verificado</span>{% endif %}
+    </div>
+    <h1 class="text-3xl font-extrabold mt-2">Hola, {{ current_user.full_name.split()[0] }}</h1>
+    <p class="text-blue-200 mt-1">Aquí tienes todo lo que necesitas para gestionar tus mascotas y adopciones.</p>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
+  {% for label, val, color, icon in [
+    ('Total',    stats.total,            'bg-gray-50 border-gray-200',    '🐾'),
+    ('Perdidos', stats.lost,             'bg-red-50 border-red-200',      '🔍'),
+    ('Urgentes', stats.urgent,           'bg-orange-50 border-orange-200','🚨'),
+    ('Adopción', stats.adoption,         'bg-blue-50 border-blue-200',    '🏠'),
+    ('Adoptados',stats.adopted,          'bg-green-50 border-green-200',  '✅'),
+    ('Solicitudes',stats.pending_requests,'bg-purple-50 border-purple-200','📋'),
+    ('Avistam.',  stats.sightings,       'bg-yellow-50 border-yellow-200','👁'),
+  ] %}
+    <div class="card border {{ color }} p-4 text-center">
+      <div class="text-xl mb-1">{{ icon }}</div>
+      <div class="text-2xl font-extrabold text-gray-900">{{ val }}</div>
+      <div class="text-xs text-gray-500 mt-0.5">{{ label }}</div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Nav del panel -->
+<div class="flex flex-wrap gap-2 mb-8">
+  <a href="{{ url_for('rescuer.my_pets') }}" class="btn-secondary">🐾 Mis mascotas</a>
+  <a href="{{ url_for('rescuer.all_requests') }}" class="btn-secondary">
+    📋 Solicitudes
+    {% if stats.pending_requests > 0 %}
+      <span class="ml-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ stats.pending_requests }}</span>
+    {% endif %}
+  </a>
+  <a href="{{ url_for('rescuer.sightings') }}" class="btn-secondary">
+    👁 Avistamientos
+    {% if stats.sightings > 0 %}
+      <span class="ml-1 bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ stats.sightings }}</span>
+    {% endif %}
+  </a>
+  <a href="{{ url_for('pets.create') }}" class="btn-primary">➕ Reportar mascota</a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Solicitudes pendientes -->
+  <div class="card p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-bold text-gray-900 flex items-center gap-2">📋 Solicitudes pendientes</h2>
+      <a href="{{ url_for('rescuer.all_requests', status='Pendiente') }}" class="text-xs text-orange-500 hover:underline font-semibold">Ver todas →</a>
+    </div>
+    {% if pending_requests %}
+      <div class="space-y-3">
+        {% for req in pending_requests %}
+          <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-orange-50 transition-colors">
+            <div class="avatar from-orange-400 to-rose-500 w-9 h-9 text-sm flex-shrink-0">
+              {{ req.applicant.initials }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-sm text-gray-900 truncate">{{ req.applicant.full_name }}</p>
+              <p class="text-xs text-gray-500 truncate">quiere adoptar: <span class="font-medium">{{ req.pet.display_name }}</span></p>
+            </div>
+            <a href="{{ url_for('adoptions.review', req_id=req.id) }}" class="btn-primary btn-sm flex-shrink-0">Revisar</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-8 text-gray-400">
+        <div class="text-3xl mb-2">✅</div>
+        <p class="text-sm">Sin solicitudes pendientes</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Avistamientos recientes -->
+  <div class="card p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-bold text-gray-900 flex items-center gap-2">👁 Avistamientos nuevos</h2>
+      <a href="{{ url_for('rescuer.sightings') }}" class="text-xs text-orange-500 hover:underline font-semibold">Ver todos →</a>
+    </div>
+    {% if recent_sightings %}
+      <div class="space-y-3">
+        {% for s in recent_sightings[:5] %}
+          <div class="p-3 bg-gray-50 rounded-xl">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-sm text-gray-900">{{ s.pet.display_name }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">📍 {{ s.zone }}</p>
+                <p class="text-xs text-gray-600 mt-1 line-clamp-2">{{ s.description }}</p>
+              </div>
+              <span class="text-xs text-gray-400 flex-shrink-0">{{ s.seen_at.strftime('%d %b') }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-8 text-gray-400">
+        <div class="text-3xl mb-2">👁</div>
+        <p class="text-sm">Sin avistamientos nuevos</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Mis mascotas recientes -->
+{% if my_pets %}
+  <div class="mt-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-bold text-gray-900">Mis mascotas recientes</h2>
+      <a href="{{ url_for('rescuer.my_pets') }}" class="text-xs text-orange-500 hover:underline font-semibold">Ver todas →</a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for pet in my_pets %}{% include "pets/_card.html" %}{% endfor %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

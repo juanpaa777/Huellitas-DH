@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center py-8">
+  <div class="w-full max-w-lg">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg mb-4">
+        <span class="text-3xl">🐾</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-gray-900">Crea tu cuenta</h1>
+      <p class="text-gray-500 mt-1 text-sm">Únete a la comunidad que protege a las mascotas de Dolores Hidalgo</p>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-form border border-gray-100 overflow-hidden">
+      <div class="h-1.5 bg-gradient-to-r from-orange-400 via-rose-400 to-amber-400"></div>
+      <div class="p-8">
+        <form method="post" novalidate class="space-y-5">
+          {{ form.hidden_tag() }}
+
+          <!-- Nombre completo -->
+          <div class="field-wrapper">
+            {{ form.full_name.label(class="field-label") }}
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              </span>
+              {{ form.full_name(class="field-input pl-10", placeholder="Tu nombre completo") }}
+            </div>
+            {% for e in form.full_name.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+
+          <!-- Username + Email -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="field-wrapper">
+              {{ form.username.label(class="field-label") }}
+              {{ form.username(class="field-input", placeholder="mi_usuario") }}
+              {% for e in form.username.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+            </div>
+            <div class="field-wrapper">
+              {{ form.email.label(class="field-label") }}
+              {{ form.email(class="field-input", placeholder="tu@correo.com") }}
+              {% for e in form.email.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+            </div>
+          </div>
+
+          <!-- WhatsApp -->
+          <div class="field-wrapper">
+            {{ form.phone_whatsapp.label(class="field-label") }}
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-base">📱</span>
+              {{ form.phone_whatsapp(class="field-input pl-10", placeholder="+52 418 123 4567") }}
+            </div>
+            <p class="field-hint">Permite que otros te contacten directamente por WhatsApp al reportar.</p>
+          </div>
+
+          <!-- Contraseñas -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="field-wrapper">
+              {{ form.password.label(class="field-label") }}
+              {{ form.password(class="field-input", placeholder="Mínimo 8 caracteres", id="p1") }}
+              {% for e in form.password.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+            </div>
+            <div class="field-wrapper">
+              {{ form.confirm.label(class="field-label") }}
+              {{ form.confirm(class="field-input", placeholder="Repite tu contraseña", id="p2") }}
+              {% for e in form.confirm.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary w-full py-3 text-base justify-center mt-2">
+            Crear cuenta gratuita
+          </button>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-gray-100 text-center">
+          <p class="text-sm text-gray-500">
+            ¿Ya tienes cuenta?
+            <a href="{{ url_for('auth.login') }}" class="font-semibold text-orange-600 hover:text-orange-700">Inicia sesión →</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+    <a href="{{ url_for('main.index') }}" class="hover:text-orange-500 transition-colors">Inicio</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <a href="{{ url_for('pets.index') }}" class="hover:text-orange-500 transition-colors">Mascotas</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-gray-700 font-medium">{{ pet.display_name }}</span>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <!-- ── Columna izquierda ──────────────────────────── -->
+    <div class="lg:col-span-2 space-y-4">
+      <!-- Imagen + badge -->
+      <div class="card overflow-hidden">
+        <div class="relative">
+          {% if pet.image_url %}
+            <img src="{{ url_for('static', filename='uploads/pets/' + pet.image_url) }}"
+                 alt="{{ pet.display_name }}"
+                 class="w-full h-72 object-cover"/>
+          {% else %}
+            <div class="w-full h-72 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center text-8xl">
+              {{ pet.species_emoji }}
+            </div>
+          {% endif %}
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+            <span class="badge text-sm font-bold text-white px-3 py-1.5 rounded-xl"
+                  style="background:{{ {'Perdido':'#ef4444','Urgente':'#f97316','En Adopción':'#3b82f6','Encontrado':'#22c55e','Adoptado':'#a855f7'}.get(pet.status,'#6b7280') }}">
+              {{ pet.status }}
+            </span>
+            <h1 class="text-white text-xl font-extrabold mt-2 drop-shadow">{{ pet.display_name }}</h1>
+          </div>
+        </div>
+        <div class="p-4 text-sm text-gray-500">
+          <p>{{ pet.species }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</p>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="card p-4 space-y-2.5">
+        {% if pet.whatsapp_url %}
+          <a href="{{ pet.whatsapp_url }}" target="_blank"
+             class="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-semibold text-sm text-white transition-all"
+             style="background:#25d366">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Contactar por WhatsApp
+          </a>
+        {% endif %}
+
+        {% if current_user.is_authenticated %}
+          {% if pet.status in ['En Adopción', 'Urgente'] and pet.reporter_id != current_user.id %}
+            {% if not user_request %}
+              <a href="{{ url_for('adoptions.request_adoption', pet_id=pet.id) }}"
+                 class="btn-primary w-full justify-center py-3">🏠 Solicitar adopción</a>
+            {% else %}
+              <div class="rounded-xl px-4 py-3 text-sm font-semibold text-center
+                {% if user_request.status == 'Aprobado' %}bg-green-50 text-green-700 border border-green-200
+                {% elif user_request.status == 'Rechazado' %}bg-red-50 text-red-700 border border-red-200
+                {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+                Tu solicitud: {{ user_request.status }}
+              </div>
+            {% endif %}
+          {% endif %}
+
+          {% if pet.status == 'Perdido' or pet.status == 'Urgente' %}
+            <button onclick="document.getElementById('sighting-modal').classList.remove('hidden')"
+                    class="btn-secondary w-full justify-center">👁 Reportar avistamiento</button>
+          {% endif %}
+
+          {% if pet.reporter_id == current_user.id or current_user.is_rescuer %}
+            <hr class="border-gray-100"/>
+            <a href="{{ url_for('pets.edit', pet_id=pet.id) }}" class="btn-secondary w-full justify-center">✏️ Editar reporte</a>
+            <a href="{{ url_for('adoptions.pet_requests', pet_id=pet.id) }}" class="btn-secondary w-full justify-center">
+              📋 Solicitudes
+              {% if pet.pending_requests_count > 0 %}
+                <span class="ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{{ pet.pending_requests_count }}</span>
+              {% endif %}
+            </a>
+          {% endif %}
+
+          {# take_pet block #}
+          {% if current_user.is_rescuer and pet.rescuer_id is none and pet.reporter_id != current_user.id %}
+            {% if current_user.is_rescuer %}
+              <form method="post" action="{{ url_for('rescuer.take_pet', pet_id=pet.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn-secondary w-full justify-center text-blue-700">🛡 Asignarme como rescatista</button>
+              </form>
+            {% endif %}
+          {% endif %}
+
+          {% if pet.reporter_id == current_user.id or current_user.is_admin %}
+            <form method="post" action="{{ url_for('pets.delete', pet_id=pet.id) }}"
+                  onsubmit="return confirm('¿Eliminar este reporte?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn-danger w-full justify-center text-sm py-2.5">🗑 Eliminar reporte</button>
+            </form>
+          {% endif %}
+        {% else %}
+          <a href="{{ url_for('auth.login') }}"
+             class="btn-secondary w-full justify-center text-orange-600 border-orange-200">
+            Inicia sesión para interactuar
+          </a>
+        {% endif %}
+      </div>
+
+      <!-- Rescatista asignado -->
+      {% if pet.rescuer %}
+        <div class="card p-4 flex items-center gap-3 bg-blue-50 border-blue-100">
+          <div class="avatar from-blue-400 to-indigo-500 w-10 h-10 text-sm flex-shrink-0">
+            {{ pet.rescuer.initials }}
+          </div>
+          <div>
+            <p class="text-xs font-bold text-blue-700">Rescatista asignado</p>
+            <p class="text-sm font-semibold text-gray-900">{{ pet.rescuer.full_name }}</p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Columna derecha ────────────────────────────── -->
+    <div class="lg:col-span-3 space-y-5">
+      <!-- Datos -->
+      <div class="card p-6">
+        <h2 class="font-bold text-gray-900 text-lg mb-5 flex items-center gap-2">
+          <span class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 text-sm">ℹ</span>
+          Información
+        </h2>
+        <dl class="grid grid-cols-2 gap-4 text-sm">
+          <div class="bg-gray-50 rounded-xl p-3">
+            <dt class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Especie</dt>
+            <dd class="font-bold text-gray-900">{{ pet.species }}</dd>
+          </div>
+          {% if pet.breed %}
+            <div class="bg-gray-50 rounded-xl p-3">
+              <dt class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Raza</dt>
+              <dd class="font-bold text-gray-900">{{ pet.breed }}</dd>
+            </div>
+          {% endif %}
+          {% if pet.approximate_age %}
+            <div class="bg-gray-50 rounded-xl p-3">
+              <dt class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Edad</dt>
+              <dd class="font-bold text-gray-900">{{ pet.approximate_age }}</dd>
+            </div>
+          {% endif %}
+          <div class="bg-gray-50 rounded-xl p-3">
+            <dt class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Color</dt>
+            <dd class="font-bold text-gray-900">{{ pet.color }}</dd>
+          </div>
+          <div class="bg-orange-50 rounded-xl p-3 border border-orange-100">
+            <dt class="text-xs text-orange-600 font-semibold uppercase tracking-wide mb-1">📍 Zona</dt>
+            <dd class="font-bold text-gray-900">{{ pet.location_zone }}</dd>
+          </div>
+          {% if pet.last_seen_date %}
+            <div class="bg-gray-50 rounded-xl p-3">
+              <dt class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Visto el</dt>
+              <dd class="font-bold text-gray-900">{{ pet.last_seen_date.strftime('%d %b %Y') }}</dd>
+            </div>
+          {% endif %}
+          {% if pet.location_reference %}
+            <div class="col-span-2 bg-gray-50 rounded-xl p-3">
+              <dt class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Referencia</dt>
+              <dd class="font-semibold text-gray-900">{{ pet.location_reference }}</dd>
+            </div>
+          {% endif %}
+          <div class="col-span-2 bg-gray-50 rounded-xl p-3">
+            <dt class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Señas particulares</dt>
+            <dd class="text-gray-700 leading-relaxed">{{ pet.description }}</dd>
+          </div>
+        </dl>
+        <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
+          <span>Reportado por <strong class="text-gray-600">{{ pet.reporter.full_name }}</strong></span>
+          <span>{{ pet.created_at.strftime('%d %b %Y') }}</span>
+        </div>
+      </div>
+
+      <!-- Cambiar estado -->
+      {% if current_user.is_authenticated and (pet.reporter_id == current_user.id or current_user.is_rescuer) %}
+        <div class="card p-5">
+          <h2 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 text-xs">🔄</span>
+            Actualizar estado
+          </h2>
+          <form method="post" action="{{ url_for('pets.update_status', pet_id=pet.id) }}"
+                class="flex flex-wrap gap-3 items-end">
+            {{ status_form.hidden_tag() }}
+            <div class="flex-1 min-w-36">
+              {{ status_form.status(class="field-select") }}
+            </div>
+            <div class="flex-1 min-w-44">
+              {{ status_form.note(class="field-input", placeholder="Nota (opcional)…") }}
+            </div>
+            <button type="submit" class="btn-primary btn-sm py-3">Actualizar</button>
+          </form>
+        </div>
+      {% endif %}
+
+      <!-- Avistamientos -->
+      {% if sightings %}
+        <div class="card p-5">
+          <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600 text-xs">👁</span>
+            Avistamientos ({{ sightings|length }})
+          </h2>
+          <div class="space-y-3">
+            {% for s in sightings %}
+              <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm">
+                <div class="flex items-start justify-between gap-2 mb-2">
+                  <p class="font-semibold text-gray-900 flex items-center gap-1">
+                    📍 {{ s.zone }}{% if s.reference %} · <span class="font-normal text-gray-600">{{ s.reference }}</span>{% endif %}
+                  </p>
+                  {% if s.is_confirmed %}
+                    <span class="badge bg-green-100 text-green-700 text-xs flex-shrink-0">✓ Confirmado</span>
+                  {% endif %}
+                </div>
+                <p class="text-gray-700 text-xs">{{ s.description }}</p>
+                <p class="text-gray-400 text-xs mt-2">
+                  {{ s.seen_at.strftime('%d %b %Y, %H:%M') }}
+                  {% if s.reporter_user %} · {{ s.reporter_user.full_name }}{% endif %}
+                </p>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Historial de estado -->
+      {% if logs %}
+        <div class="card p-5">
+          <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-xs">📋</span>
+            Expediente
+          </h2>
+          <div class="relative">
+            <div class="absolute left-3 top-0 bottom-0 w-px bg-gray-200"></div>
+            <div class="space-y-4 pl-8">
+              {% for log in logs %}
+                <div class="relative">
+                  <div class="absolute -left-5 top-1 w-2.5 h-2.5 rounded-full bg-orange-400 border-2 border-white shadow-sm"></div>
+                  <p class="font-semibold text-sm text-gray-900">
+                    {% if log.old_status %}<span class="text-gray-400">{{ log.old_status }}</span> → {% endif %}
+                    <span class="text-gray-900">{{ log.new_status }}</span>
+                  </p>
+                  {% if log.note %}<p class="text-xs text-gray-500 mt-0.5">{{ log.note }}</p>{% endif %}
+                  <p class="text-xs text-gray-400 mt-0.5">
+                    {{ log.created_at.strftime('%d %b %Y, %H:%M') }}
+                    {% if log.changer %} · {{ log.changer.full_name }}{% endif %}
+                  </p>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Comentarios -->
+      <div class="card p-5">
+        <h2 class="font-bold text-gray-900 mb-5 flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center text-green-600 text-xs">💬</span>
+          Comentarios ({{ comments|length }})
+        </h2>
+        {% for c in comments %}
+          <div class="flex gap-3 mb-4 pb-4 border-b border-gray-100 last:border-0 last:mb-0 last:pb-0">
+            <div class="avatar from-orange-400 to-rose-500 w-9 h-9 text-xs flex-shrink-0">
+              {{ c.author.initials }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-2 mb-1">
+                <div>
+                  <span class="font-semibold text-sm text-gray-900">{{ c.author.full_name }}</span>
+                  <span class="text-xs text-gray-400 ml-2">{{ c.created_at.strftime('%d %b, %H:%M') }}</span>
+                </div>
+                {% if current_user.is_authenticated and (c.author_id == current_user.id or current_user.is_admin) %}
+                  <form method="post" action="{{ url_for('pets.delete_comment', comment_id=c.id) }}" class="inline flex-shrink-0">
+                    {{ comment_form.hidden_tag() }}
+                    <button class="text-gray-300 hover:text-red-400 transition-colors text-xs">✕</button>
+                  </form>
+                {% endif %}
+              </div>
+              <p class="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-3 py-2">{{ c.content }}</p>
+            </div>
+          </div>
+        {% endfor %}
+        {% if not comments %}
+          <p class="text-sm text-center text-gray-400 py-6">Sé el primero en comentar.</p>
+        {% endif %}
+        {% if current_user.is_authenticated %}
+          <form method="post" action="{{ url_for('pets.comment', pet_id=pet.id) }}"
+                class="mt-5 pt-5 border-t border-gray-100 flex gap-3">
+            {{ comment_form.hidden_tag() }}
+            <div class="avatar from-orange-400 to-rose-500 w-9 h-9 text-xs flex-shrink-0">
+              {{ current_user.initials }}
+            </div>
+            <div class="flex-1 space-y-2">
+              {{ comment_form.content(class="field-textarea", rows=2,
+                 placeholder="Escribe un comentario…") }}
+              <button type="submit" class="btn-primary btn-sm">Publicar</button>
+            </div>
+          </form>
+        {% else %}
+          <p class="text-sm text-center text-gray-400 mt-5 pt-5 border-t border-gray-100">
+            <a href="{{ url_for('auth.login') }}" class="text-orange-500 font-semibold hover:underline">Inicia sesión</a>
+            para comentar.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de avistamiento -->
+{% if current_user.is_authenticated %}
+  <div id="sighting-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="document.getElementById('sighting-modal').classList.add('hidden')"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
+      <div class="h-1.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400"></div>
+      <div class="p-7">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-lg font-extrabold text-gray-900">👁 Reportar avistamiento</h3>
+          <button onclick="document.getElementById('sighting-modal').classList.add('hidden')"
+                  class="text-gray-400 hover:text-gray-700 p-1">✕</button>
+        </div>
+        <form method="post" action="{{ url_for('pets.add_sighting', pet_id=pet.id) }}"
+              class="space-y-4">
+          {{ sighting_form.hidden_tag() }}
+          <div class="field-wrapper">
+            {{ sighting_form.zone.label(class="field-label") }}
+            {{ sighting_form.zone(class="field-select") }}
+            {% for e in sighting_form.zone.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+          <div class="field-wrapper">
+            {{ sighting_form.reference.label(class="field-label") }}
+            {{ sighting_form.reference(class="field-input", placeholder="Ej. Frente a la farmacia, cerca del mercado…") }}
+          </div>
+          <div class="field-wrapper">
+            {{ sighting_form.seen_at.label(class="field-label") }}
+            {{ sighting_form.seen_at(class="field-input", type="datetime-local") }}
+            {% for e in sighting_form.seen_at.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+          <div class="field-wrapper">
+            {{ sighting_form.description.label(class="field-label") }}
+            {{ sighting_form.description(class="field-textarea", rows=3,
+               placeholder="¿Cómo estaba la mascota? ¿Tenía collar? ¿Parecía asustada?") }}
+            {% for e in sighting_form.description.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button type="submit" class="btn-primary flex-1 justify-center">Enviar avistamiento</button>
+            <button type="button" onclick="document.getElementById('sighting-modal').classList.add('hidden')"
+                    class="btn-secondary px-4">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

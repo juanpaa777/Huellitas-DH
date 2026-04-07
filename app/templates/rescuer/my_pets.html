@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <a href="{{ url_for('rescuer.dashboard') }}" class="text-sm text-gray-400 hover:text-orange-500 transition-colors">← Panel rescatista</a>
+    <h1 class="page-title mt-1">🐾 Mis mascotas</h1>
+  </div>
+  <a href="{{ url_for('pets.create') }}" class="btn-primary">➕ Reportar mascota</a>
+</div>
+<!-- Filtros de estado -->
+<div class="flex flex-wrap gap-2 mb-6">
+  <a href="{{ url_for('rescuer.my_pets') }}"
+     class="{{ 'btn-primary btn-sm' if not current_status else 'btn-secondary btn-sm' }}">Todas</a>
+  {% for s in statuses %}
+    <a href="{{ url_for('rescuer.my_pets', status=s) }}"
+       class="{{ 'btn-primary btn-sm' if current_status == s else 'btn-secondary btn-sm' }}">{{ s }}</a>
+  {% endfor %}
+</div>
+{% if pets %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+    {% for pet in pets %}{% include "pets/_card.html" %}{% endfor %}
+  </div>
+{% else %}
+  <div class="card p-16 text-center">
+    <div class="text-5xl mb-4">🐾</div>
+    <p class="text-gray-500 font-semibold">No hay mascotas con ese filtro</p>
+    <a href="{{ url_for('pets.create') }}" class="btn-primary mt-4 inline-flex">Reportar una mascota</a>
+  </div>
+{% endif %}
+{% endblock %}

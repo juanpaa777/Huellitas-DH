@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="page-header">
+    <a href="{{ url_for('pets.detail', pet_id=pet.id) }}" class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-orange-500 mb-3 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      Volver a {{ pet.display_name }}
+    </a>
+    <h1 class="page-title">🏠 Solicitud de Adopción</h1>
+    <p class="page-subtitle text-sm">El rescatista evaluará tu solicitud antes de contactarte.</p>
+  </div>
+
+  <!-- Mini card de la mascota -->
+  <div class="card mb-6 p-4 flex items-center gap-4 bg-gradient-to-r from-orange-50 to-amber-50 border-orange-100">
+    {% if pet.image_url %}
+      <img src="{{ url_for('static', filename='uploads/pets/' + pet.image_url) }}"
+           class="w-16 h-16 rounded-2xl object-cover shadow-sm border-2 border-white flex-shrink-0"/>
+    {% else %}
+      <div class="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center text-3xl flex-shrink-0">
+        {{ pet.species_emoji }}
+      </div>
+    {% endif %}
+    <div>
+      <p class="font-bold text-gray-900">{{ pet.display_name }}</p>
+      <p class="text-sm text-gray-500">{{ pet.species }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</p>
+      <p class="text-xs text-orange-600 mt-0.5">📍 {{ pet.location_zone }}</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-form border border-gray-100 overflow-hidden">
+    <div class="h-1.5 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400"></div>
+
+    <form method="post" novalidate class="p-7 md:p-10 space-y-8">
+      {{ form.hidden_tag() }}
+
+      <!-- Vivienda -->
+      <div>
+        <p class="form-section-title">🏡 Tu vivienda</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div class="field-wrapper">
+            {{ form.housing_type.label(class="field-label") }}
+            {{ form.housing_type(class="field-select") }}
+            {% for e in form.housing_type.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+          <div class="field-wrapper">
+            {{ form.home_size.label(class="field-label") }}
+            {{ form.home_size(class="field-select") }}
+          </div>
+          <div class="sm:col-span-2">
+            <label class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-all">
+              {{ form.has_yard(class="w-4 h-4 accent-orange-500 flex-shrink-0") }}
+              <span>
+                <span class="text-sm font-semibold text-gray-800">Mi hogar tiene patio o jardín</span>
+                <span class="block text-xs text-gray-400 mt-0.5">Importante para algunas razas activas</span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Convivencia -->
+      <div>
+        <p class="form-section-title">👨‍👩‍👧 Convivencia</p>
+        <div class="space-y-4">
+          <label class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all">
+            {{ form.has_children(class="w-4 h-4 accent-blue-500 flex-shrink-0") }}
+            <span class="text-sm font-semibold text-gray-800">Hay niños en el hogar</span>
+          </label>
+          <div class="field-wrapper ml-7">
+            {{ form.children_ages.label(class="field-label") }}
+            {{ form.children_ages(class="field-input", placeholder="Ej. 5 y 8 años") }}
+          </div>
+          <label class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all">
+            {{ form.has_other_pets(class="w-4 h-4 accent-blue-500 flex-shrink-0") }}
+            <span class="text-sm font-semibold text-gray-800">Tengo otras mascotas</span>
+          </label>
+          <div class="field-wrapper ml-7">
+            {{ form.other_pets_desc.label(class="field-label") }}
+            {{ form.other_pets_desc(class="field-input", placeholder="Ej. 1 perro macho, 3 años, esterilizado") }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Experiencia -->
+      <div>
+        <p class="form-section-title">🐾 Experiencia con mascotas</p>
+        <label class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer hover:bg-green-50 hover:border-green-200 transition-all mb-4">
+          {{ form.previous_pets(class="w-4 h-4 accent-green-500 flex-shrink-0") }}
+          <span class="text-sm font-semibold text-gray-800">He tenido mascotas antes</span>
+        </label>
+        <div class="field-wrapper">
+          {{ form.experience_desc.label(class="field-label") }}
+          {{ form.experience_desc(class="field-textarea", rows=3,
+             placeholder="Cuéntanos brevemente tu experiencia…") }}
+        </div>
+      </div>
+
+      <!-- Compromiso -->
+      <div>
+        <p class="form-section-title">💛 Motivación y compromiso</p>
+        <div class="space-y-5">
+          <div class="field-wrapper">
+            {{ form.reason.label(class="field-label") }}
+            {{ form.reason(class="field-textarea", rows=4,
+               placeholder="¿Por qué quieres adoptar a esta mascota? ¿Cómo será su vida contigo? ¿Tienes el tiempo y recursos para cuidarla?") }}
+            {% for e in form.reason.errors %}<p class="field-error">⚠ {{ e }}</p>{% endfor %}
+          </div>
+          <div class="field-wrapper">
+            {{ form.contact_address.label(class="field-label") }}
+            {{ form.contact_address(class="field-input", placeholder="Colonia o zona donde vives en Dolores Hidalgo") }}
+          </div>
+          <!-- Checkboxes de compromiso -->
+          <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-4">
+            <p class="text-xs font-bold text-amber-800 uppercase tracking-wide mb-3">Compromisos importantes</p>
+            <label class="flex items-start gap-3 cursor-pointer">
+              {{ form.aware_of_cost(class="w-4 h-4 accent-amber-600 mt-0.5 flex-shrink-0") }}
+              <span class="text-sm text-gray-700 leading-relaxed">
+                Entiendo que adoptar implica gastos veterinarios, alimentación y cuidado durante <strong>toda la vida</strong> de la mascota.
+              </span>
+            </label>
+            {% for e in form.aware_of_cost.errors %}<p class="field-error ml-7">⚠ {{ e }}</p>{% endfor %}
+            <label class="flex items-start gap-3 cursor-pointer">
+              {{ form.accepts_home_visit(class="w-4 h-4 accent-amber-600 mt-0.5 flex-shrink-0") }}
+              <span class="text-sm text-gray-700 leading-relaxed">
+                Acepto que el rescatista pueda coordinar una visita a mi hogar para verificar las condiciones.
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-3 pt-2">
+        <button type="submit" class="btn-primary px-8 py-3 text-base" style="background: linear-gradient(to right, #4f46e5, #7c3aed)">
+          📨 Enviar solicitud
+        </button>
+        <a href="{{ url_for('pets.detail', pet_id=pet.id) }}" class="btn-secondary py-3">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

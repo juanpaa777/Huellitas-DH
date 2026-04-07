@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <h1 class="page-title">🐾 Mascotas</h1>
+    <p class="page-subtitle text-sm">{{ pets.total }} resultado(s) encontrados</p>
+  </div>
+  {% if current_user.is_authenticated %}
+    <a href="{{ url_for('pets.create') }}" class="btn-primary">➕ Reportar mascota</a>
+  {% endif %}
+</div>
+
+<!-- Filtros -->
+<div class="card p-5 mb-7">
+  <form method="get" class="flex flex-wrap gap-3 items-end">
+    <div class="flex-1 min-w-44">
+      <label class="field-label">Buscar</label>
+      <div class="relative">
+        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </span>
+        <input type="text" name="q" value="{{ request.args.get('q','') }}"
+               placeholder="Nombre, color, descripción…" class="field-input pl-10"/>
+      </div>
+    </div>
+    <div class="min-w-36">
+      <label class="field-label">Estado</label>
+      <select name="status" class="field-select">
+        <option value="">Todos</option>
+        {% for s in statuses %}
+          <option value="{{ s }}" {{ 'selected' if request.args.get('status') == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="min-w-44">
+      <label class="field-label">Zona</label>
+      <select name="zone" class="field-select">
+        <option value="">Todas las zonas</option>
+        {% for z in zones %}
+          <option value="{{ z }}" {{ 'selected' if request.args.get('zone') == z }}>{{ z }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn-primary">Filtrar</button>
+    <a href="{{ url_for('pets.index') }}" class="btn-secondary">Limpiar</a>
+  </form>
+</div>
+
+{% if pets.items %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+    {% for pet in pets.items %}{% include "pets/_card.html" %}{% endfor %}
+  </div>
+  {% if pets.pages > 1 %}
+    <div class="flex justify-center gap-2 mt-8">
+      {% if pets.has_prev %}
+        <a href="{{ url_for('pets.index', page=pets.prev_num, **request.args) }}" class="btn-secondary">← Anterior</a>
+      {% endif %}
+      <span class="px-4 py-2 text-sm font-semibold text-gray-600">Página {{ pets.page }} de {{ pets.pages }}</span>
+      {% if pets.has_next %}
+        <a href="{{ url_for('pets.index', page=pets.next_num, **request.args) }}" class="btn-secondary">Siguiente →</a>
+      {% endif %}
+    </div>
+  {% endif %}
+{% else %}
+  <div class="card p-16 text-center">
+    <div class="text-5xl mb-4">🔍</div>
+    <h3 class="text-xl font-bold text-gray-600 mb-2">Sin resultados</h3>
+    <p class="text-gray-400 text-sm">Intenta con otros filtros.</p>
+  </div>
+{% endif %}
+{% endblock %}

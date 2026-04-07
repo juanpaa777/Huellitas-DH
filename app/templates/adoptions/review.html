@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <a href="{{ url_for('adoptions.pet_requests', pet_id=pet.id) }}"
+     class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-orange-500 mb-5 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    Volver a solicitudes
+  </a>
+
+  <div class="bg-white rounded-3xl shadow-form border border-gray-100 overflow-hidden mb-5">
+    <div class="h-1.5 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
+    <div class="p-7">
+      <!-- Solicitante -->
+      <div class="flex items-center gap-4 mb-7 pb-6 border-b border-gray-100">
+        <div class="avatar from-violet-400 to-purple-600 w-14 h-14 text-lg flex-shrink-0">
+          {{ req.applicant.initials }}
+        </div>
+        <div class="flex-1">
+          <h1 class="text-xl font-extrabold text-gray-900">{{ req.applicant.full_name }}</h1>
+          <p class="text-gray-500 text-sm">{{ req.applicant.email }}</p>
+          {% if req.applicant.phone_whatsapp %}
+            <a href="https://wa.me/{{ req.applicant.phone_whatsapp|replace('+','') }}"
+               target="_blank"
+               class="inline-flex items-center gap-1.5 text-xs text-green-600 font-semibold mt-1 hover:underline">
+              📱 {{ req.applicant.phone_whatsapp }}
+            </a>
+          {% endif %}
+        </div>
+        <span class="badge text-sm
+          {% if req.status == 'Aprobado' %}bg-green-100 text-green-700
+          {% elif req.status == 'Rechazado' %}bg-red-100 text-red-700
+          {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+          {{ req.status }}
+        </span>
+      </div>
+
+      <!-- Secciones de datos -->
+      {% macro info_row(label, value) %}
+        <div class="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+          <span class="text-sm text-gray-400">{{ label }}</span>
+          <span class="text-sm font-semibold text-gray-900">{{ value }}</span>
+        </div>
+      {% endmacro %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+        <div class="bg-gray-50 rounded-2xl p-4">
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">🏡 Vivienda</p>
+          {{ info_row('Tipo', req.housing_type) }}
+          {{ info_row('Tamaño', req.home_size or '—') }}
+          {{ info_row('Patio', '✅ Sí' if req.has_yard else '❌ No') }}
+        </div>
+        <div class="bg-gray-50 rounded-2xl p-4">
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">👨‍👩‍👧 Convivencia</p>
+          {{ info_row('Niños', ('Sí — ' + (req.children_ages or '')) if req.has_children else 'No') }}
+          {{ info_row('Otras mascotas', req.other_pets_desc if req.has_other_pets else 'No') }}
+          {{ info_row('Exp. previa', 'Sí' if req.previous_pets else 'No') }}
+        </div>
+      </div>
+
+      {% if req.experience_desc %}
+        <div class="bg-gray-50 rounded-2xl p-4 mb-4">
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Experiencia</p>
+          <p class="text-sm text-gray-700">{{ req.experience_desc }}</p>
+        </div>
+      {% endif %}
+
+      <div class="bg-indigo-50 rounded-2xl p-4 mb-4 border border-indigo-100">
+        <p class="text-xs font-bold text-indigo-700 uppercase tracking-wide mb-2">💛 Motivación</p>
+        <p class="text-sm text-gray-700 leading-relaxed">{{ req.reason }}</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-center">
+        <div class="p-3 rounded-xl {{ 'bg-green-50 text-green-700' if req.aware_of_cost else 'bg-red-50 text-red-600' }}">
+          {{ '✅' if req.aware_of_cost else '❌' }} Consciente de costos
+        </div>
+        <div class="p-3 rounded-xl {{ 'bg-green-50 text-green-700' if req.accepts_home_visit else 'bg-gray-50 text-gray-500' }}">
+          {{ '✅' if req.accepts_home_visit else '—' }} Acepta visita
+        </div>
+        <div class="p-3 rounded-xl bg-gray-50 text-gray-600">
+          📍 {{ req.contact_address or '—' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acción del rescatista -->
+  {% if req.status == 'Pendiente' %}
+    <div class="card p-6">
+      <h2 class="font-bold text-gray-900 mb-4">Tomar decisión</h2>
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-5">
+          <label class="field-label">Nota para el solicitante (opcional)</label>
+          <textarea name="notes_rescuer" rows="3" class="field-textarea"
+                    placeholder="Ej. Te contactaremos esta semana para coordinar la visita…"></textarea>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <button type="submit" name="action" value="approve" class="btn-success flex-1 justify-center py-3">
+            ✅ Aprobar solicitud
+          </button>
+          <button type="submit" name="action" value="reject"
+                  onclick="return confirm('¿Rechazar esta solicitud?')"
+                  class="btn-danger px-6 py-3">
+            ✕ Rechazar
+          </button>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <div class="card p-5 bg-gray-50">
+      <p class="text-sm text-gray-500 font-medium">
+        Esta solicitud fue marcada como <strong>{{ req.status }}</strong>.
+      </p>
+      {% if req.notes_rescuer %}
+        <p class="text-sm text-gray-700 mt-2 p-3 bg-white rounded-xl">{{ req.notes_rescuer }}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
