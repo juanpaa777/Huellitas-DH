@@ -88,8 +88,8 @@ huellitas_unidas/
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/huellitas_unidas.git
-cd huellitas_unidas
+git clone [https://github.com/tu-usuario/huellitas_unidas.git](https://github.com/Tanquex/Huellitas-DH.git)
+
 ```
 
 ### 2. Crear y activar el entorno virtual
