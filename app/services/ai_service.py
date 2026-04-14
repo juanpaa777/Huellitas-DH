@@ -1,21 +1,27 @@
-from google import genai
+import os
 import json
 import logging
+from dotenv import load_dotenv
+from google import genai
+
+# Cargar las variables del archivo .env a la memoria
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 def evaluate_adoption_quiz(answers):
-    # PON AQUÍ LA LLAVE NUEVA QUE SÍ FUNCIONÓ
-    api_key = "AIzaSyAmWz4ChRbmuYZnKNQOJneY-j0btYIzWQM" 
+    # 1. Obtenemos la llave de forma segura
+    api_key = os.getenv("GEMINI_API_KEY") 
 
-    if not api_key or api_key.startswith("AIzaSyTu"):
-        return {"score": 50, "recommendation": "Pon la llave real en el código"}
+    if not api_key:
+        logger.error("No se encontró GEMINI_API_KEY en el archivo .env")
+        return {"score": 50, "recommendation": "Error interno: Falta configurar la llave de la API."}
 
     try:
-        # Quitamos la configuración de v1. Dejamos que el SDK fluya por defecto.
+        # 2. Inicializamos el cliente de Gemini
         client = genai.Client(api_key=api_key)
         
-        # Volvemos al 2.0 lite que sí estaba en tus logs originales
+        # Usamos el modelo que ya confirmamos que funciona en tu cuenta
         model_id = "gemini-2.5-flash"
         
         prompt = f"""
@@ -28,22 +34,20 @@ def evaluate_adoption_quiz(answers):
         {{"score": 85, "recommendation": "Tu análisis aquí justificando la puntuación."}}
         """
         
-        logger.info(f"Enviando petición final a {model_id}...")
+        logger.info(f"Enviando evaluación a {model_id}...")
         
         response = client.models.generate_content(
             model=model_id,
             contents=prompt
         )
         
-        # Pelamos el JSON por si la IA se pone creativa con el formato
+        # Limpieza del JSON
         text = response.text.strip()
         if text.startswith("```"):
             text = text.replace("```json", "").replace("```", "").strip()
             
-        logger.info(f"¡ÉXITO! Respuesta de Gemini: {text}")
-        
         return json.loads(text)
 
     except Exception as e:
-        logger.error(f"Error real capturado: {str(e)}")
-        return {"score": 50, "recommendation": f"Fallo al procesar: {str(e)[:40]}"}
+        logger.error(f"Error de IA capturado: {str(e)}")
+        return {"score": 50, "recommendation": f"Fallo al procesar evaluación: {str(e)[:40]}"}
